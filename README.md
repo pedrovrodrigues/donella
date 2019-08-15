@@ -1,10 +1,10 @@
 # donella
 A stock-flow system modelling language application
 
-The project consists of: 
-  - A brand new structured language, Donella, designed to specify systems in the stock-flow-variable model proposed by Donella Meadows in her book "Thinking in Systems";
+The project consists of:
+  - A brand new structured language, Donella, designed to specify systems in the stock-flow-variable model proposed by Donella Meadows in her book "Thinking in Systems". Its specifications are in the file "specifications.txt";
   - A compiler for said language, in the file "donella.js";
-  - A HTML application for using the language, that includes:
+  - A HTML application for using the language, in the file "donella.html", that includes:
     - Input of a code written in Donella;
     - Interface with the compiler;
     - Controls for the stock values, flow rates and variable expressions especified in the compiled code;

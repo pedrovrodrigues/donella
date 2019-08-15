@@ -15,8 +15,8 @@ sistema {
     yx = out(y);
     yx = in(x);
 
-    delxy = (x-y)/100;
-    delyx = (y-x)/100;
+    delxy = (x-y)/10;
+    delyx = (y-x)/10;
     delxy ~ xy;
     delyx ~ yx;
   }

@@ -1,28 +1,3 @@
-/*
-Linguagem de especificação de modelagem de sistemas Donella
-
-Especificações léxicas:
-  Palavras Reservadas:
-    stocks, flows, links, variables, relations, out, in, val, der, int, calc, fix
-  Símbolos:
-    { } , : ; = ( ) ~ !
-    + - * / % ^
-  Regex:
-    id = [a-zA-z][a-zA-z0-9_]*
-Especificações sintáticas:
-  Program: ID { StockDecl FlowDecl LinkDecl VarDecl RelDecl }
-  StockDecl: STOCKS { ListId }
-  FlowDecl: FLOWS { ListId }
-  VarDecl: VARS { ListVar }
-  RelDecl: RELATIONS { ListRel }
-  ListId: ID | ListId , ID
-  ListVar: Var | Var ListVar
-  Var: ID : CALC | ID : FIX |
-  ListRel: Rel; ListRel | ""
-
-  Rel: ID = Expression |
-       ID ~ ID
-*/
 var erro, nomearq, codigo, carac, cadeia, nCadeia, atom, nCode;
 
 const MAXCADEIA = 50;
@@ -175,9 +150,6 @@ function NovoAtomo(){
             break;
           case '-':
             prox = NovoCarac();
-            while(isspace(prox)){
-              prox = NovoCarac();
-            }
             if(isdigit(prox)){
               FormaCadeia();
               carac = prox;

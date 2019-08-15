@@ -1,0 +1,49 @@
+Linguagem de especificação de modelagem de sistemas Donella
+
+Especificações léxicas:
+  Palavras Reservadas:
+    stocks,     ---------------------- palavra que abre o bloco de
+                                       declarações de stocks
+    flows,      ---------------------- palavra que abre o bloco de
+                                       declarações de flows
+    variables,  ---------------------- palavra que abre o bloco de
+                                       declarações de variáveis
+    relations,  ---------------------- palavra que abre o bloco de
+                                       declarações de relações
+    out,        ---------------------- operador que indica que um flow sai de
+                                       um stock (flow = out(stock))
+    in,         ---------------------- operador que indica que um flow entra
+                                       num stock (flow = in(stock))
+    calc,       ---------------------- valor usado na declaração de variáveis
+                                       para indicar que ela representará uma
+                                       expressão a ser calculada
+    fix         ---------------------- valor usado na declaração de variáveis
+                                       para indicar que ela representará uma
+                                       expressão a ser calculada
+  Símbolos:
+    { } , : ; = ( ) ~
+    + - * / ^
+  Regex:
+    ID = [a-zA-z][a-zA-z0-9_]*
+    INTCT = -?[0-9]+
+    FLOATCT = ***** A ser adicionado à linguagem *****
+
+Especificações sintáticas:
+  Program: ID { StockDecl FlowDecl VarDecl RelDecl }
+  StockDecl: STOCKS { ListId }
+  FlowDecl: FLOWS { ListId }
+  VarDecl: VARS { ListVar }
+  RelDecl: RELATIONS { ListRel }
+  ListId: ID | ID = INTCT |  ListId , ID | ListId , ID = INTCT
+  ListVar: Var | Var ListVar
+  Var: ID : CALC | ID : FIX | ID : INTCT
+  ListRel: Rel; ListRel | ε
+  Rel: ID = Expression |
+       ID ~ ID
+  Expression: IN(ID) | OUT(ID) | ExprSimples
+  ExprSimples: Term | Term OPAD ExprSimples
+  Term: Fat | Fat OPMULT Term
+  Fat: INTCT | ID | ID ^ Fat | (ExprSimples) | - Fat
+
+Especificações semânticas:
+  ***** A serem implementadas *****

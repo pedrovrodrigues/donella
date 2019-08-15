@@ -60,6 +60,8 @@
         </div>
       </div>
       <div class="third graph">
+      Chart Memory<input type="number" id="memory" value="10">
+      Step<input type="number" id="step" value="1">
       <div class="chart-container" style="position: relative; height:40vh; width:80vw">
         <div id="myChart"></canvas>
       </div>
@@ -96,7 +98,7 @@
       }
 
       button.onclick = function() {
-        myInterval = setInterval(start, 1000);
+        myInterval = setInterval(start, document.getElementById("step").value * 1000);
       }
       function start() {
         while(!ready);
@@ -137,10 +139,11 @@
               console.log(inc);
             }
             allVr[i].link.input.value = parseFloat(allVr[i].link.input.value) + inc;
-            allVr[i].link.input.value =  inc;
+            allVr[i].link.input.value = inc;
           }
         }
-        if(data.getNumberOfRows() > 10){
+        mem = document.getElementById("memory").value;
+        if(data.getNumberOfRows() > mem){
           data.removeRow(0);
         }
         console.log("adding row " + time.toString());
