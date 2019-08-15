@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Donella</title>
+    <style media="screen">
+      .third {
+        background-color: blue;
+        width: 30%;
+        height: 100%;
+        padding-left: 2%;
+        padding-right: 2%;
+        display: inline-block;
+
+      }
+      .coding {
+        background-color: green;
+        padding-left: 0;
+      }
+      .graph {
+        background-color: yellow;
+        padding-right: 0;
+      }
+      textarea {
+        width: 80%;
+        height: 80%;
+      }
+      .param {
+        display: inline-block;
+      }
+      input {
+        display: inline;
+      }
+      .content{
+        height: 800px;
+      }
+    </style>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  </head>
+  <body>
+    <h1>Modelo</h1>
+    <div class="content">
+      <div class="third coding">
+        <input type="file" id="codefile" accept="text/plain">
+        <button type="button" name="codesubmit" onclick="codeSubmit()">Submit</button>
+        <br/>
+        <textarea id="code"></textarea>
+      </div>
+      <div class="third parameters">
+        <div class="param">
+          <div id="stocks">
+            <h5>Stocks</h5>
+          </div>
+          <div id="flows">
+            <h5>Flows</h5>
+          </div>
+          <div id="vars">
+            <h5>Variables</h5>
+          </div>
+        </div>
+      </div>
+      <div class="third graph">
+      <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+        <div id="myChart"></canvas>
+      </div>
+      <button type="button" name="start" id="start" onclick="startInterval()">Start</button>
+      <button type="button" name="stop" id="start" onclick="clearInterval(myInterval)">Stop</button>
+    </div>
+    </div>
+    <script type="text/javascript" src="donella.js">
+    </script>
+    <script type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(init);
+      var button = document.getElementById("start")
+      var options = {
+        width: 400,
+        height: 240,
+        curveType: 'function',
+        animation: {
+          duration: 100,
+          easing: 'linear'
+        },
+        legend: {
+          position: 'bottom'
+        }
+      };
+      var data, ready, chart, time;
+      var allSt, allFl, allVr, myInterval;
+      function drawChart() {
+        ready = false;
+        button.disabled = true;
+        chart.draw(data, options);
+      }
+
+      button.onclick = function() {
+        myInterval = setInterval(start, 1000);
+      }
+      function start() {
+        while(!ready);
+        console.log("ready!");
+        time++;
+        var row = [time];
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+        for (var i = 0; i < allSt.length; i++) {
+          row.push(parseFloat(allSt[i].input.value));
+        }
+        console.log(data);
+        console.log(row);
+        data.addRow(row);
+        for (var i = 0; i < allFl.length; i++) {
+          if (allFl[i].in != undefined) {
+            allFl[i].in.input.value = parseFloat(allFl[i].in.input.value) + parseFloat(allFl[i].input.value);
+          }
+          if (allFl[i].out != undefined) {
+            allFl[i].out.input.value = parseFloat(allFl[i].out.input.value) - parseFloat(allFl[i].input.value);
+          }
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          if (allVr[i].link != undefined) {
+            var inc;
+            if (allVr[i].type == 'fix') {
+              inc = parseFloat(allVr[i].input.value);
+            }
+            else{
+              // Calcular expressão
+              codigo = allVr[i].expression.split("");
+              nCode = 0;
+              carac = NovoCarac();
+              NovoAtomo();
+              inc = ExecExprSimples(true);
+              console.log(allVr[i].expression);
+              console.log(inc);
+            }
+            allVr[i].link.input.value = parseFloat(allVr[i].link.input.value) + inc;
+            allVr[i].link.input.value =  inc;
+          }
+        }
+        if(data.getNumberOfRows() > 10){
+          data.removeRow(0);
+        }
+        console.log("adding row " + time.toString());
+        drawChart();
+      }
+      function init() {
+        data = new google.visualization.DataTable();
+        data.addColumn('number', 'Time');
+        //data.addColumn('number', 'PH');
+        time = 0;
+
+        chart = new google.visualization.LineChart(document.getElementById('myChart'));
+
+        google.visualization.events.addListener(chart, 'ready',
+            function() {
+              ready = true;
+              button.disabled = false;
+            });
+        drawChart();
+
+        var codeinput = document.getElementById("codefile");
+        codeinput.addEventListener('change', getFile);
+        function getFile(event) {
+        	const input = event.target;
+          if ('files' in input && input.files.length > 0) {
+        	  placeFileContent(
+              document.getElementById('code'),
+              input.files[0]);
+          }
+        }
+
+        function placeFileContent(target, file) {
+        	readFileContent(file).then(content => {
+          	target.value = content;
+          }).catch(error => console.log(error))
+        }
+
+        function readFileContent(file) {
+        	const reader = new FileReader()
+          return new Promise((resolve, reject) => {
+            reader.onload = event => resolve(event.target.result)
+            reader.onerror = error => reject(error)
+            reader.readAsText(file)
+          })
+        }
+      }
+      function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > milliseconds){
+            break;
+          }
+        }
+      }
+
+      function codeSubmit() {
+        var txt = document.getElementById("code").value;
+        console.log(txt);
+        [allSt, allFl, allVr] = main(txt);
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+
+        var stDiv = document.getElementById("stocks");
+        for (var i = 0; i < allSt.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allSt[i].name;
+          inputI.type = "text";
+          inputI.value = allSt[i].ini;
+
+          allSt[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          stDiv.appendChild(divI);
+
+          data.addColumn('number', allSt[i].name);
+        }
+        drawChart();
+        var flDiv = document.getElementById("flows");
+        for (var i = 0; i < allFl.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allFl[i].name;
+          inputI.type = "text";
+          inputI.value = allFl[i].ini;
+
+          allFl[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          flDiv.appendChild(divI);
+        }
+
+        var varDiv = document.getElementById("vars");
+        for (var i = 0; i < allVr.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allVr[i].name;
+          inputI.type = "text";
+          if(allVr[i].type == 'calc'){
+            inputI.value = allVr[i].expression;
+            inputI.disabled = true;
+          }
+          else if (allVr[i].type == 'fix') {
+            inputI.value = allVr[i].ini;
+          }
+
+          allVr[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          varDiv.appendChild(divI);
+        }
+
+      }
+    </script>
+  </body>
+</html>
