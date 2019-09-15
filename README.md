@@ -10,3 +10,6 @@ The project consists of:
     - Controls for the stock values, flow rates and variable expressions especified in the compiled code;
     - A start-stop interface that allows the user to simulate the system's behavior over time and manipulate its numbers;
     - A dynamic chart, powered by Google Charts, that tracks the stock values over time;
+
+Update: Drag-and-Drop version
+  - In the file "donella-dnd.html", there's a version of the system modelling application that bypasses the need for the language, using a drag-and-drop visual method to generate a system and simulate it.
