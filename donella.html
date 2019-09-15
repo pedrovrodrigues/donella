@@ -2,27 +2,24 @@
 <html>
   <head>
     <title>Donella</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <style media="screen">
       .third {
-        background-color: blue;
-        width: 30%;
-        height: 100%;
-        padding-left: 2%;
-        padding-right: 2%;
-        display: inline-block;
-
+        background-color: lightgrey;
+        height: auto;
+        border: 5px gold solid;
       }
-      .coding {
-        background-color: green;
-        padding-left: 0;
-      }
-      .graph {
-        background-color: yellow;
-        padding-right: 0;
+      .row {
+        padding: -3%;
       }
       textarea {
-        width: 80%;
-        height: 80%;
+        width: 90%;
+        min-height: 300px;
+        height: auto;
+        max-height: 800px;
       }
       .param {
         display: inline-block;
@@ -34,41 +31,45 @@
         height: 800px;
       }
     </style>
-    <!--Load the AJAX API-->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   </head>
   <body>
-    <h1>Modelo</h1>
-    <div class="content">
-      <div class="third coding">
-        <input type="file" id="codefile" accept="text/plain">
-        <button type="button" name="codesubmit" onclick="codeSubmit()">Submit</button>
-        <br/>
-        <textarea id="code"></textarea>
-      </div>
-      <div class="third parameters">
-        <div class="param">
-          <div id="stocks">
-            <h5>Stocks</h5>
-          </div>
-          <div id="flows">
-            <h5>Flows</h5>
-          </div>
-          <div id="vars">
-            <h5>Variables</h5>
+    <h1 class="jumbotron text-center">Simulador de modelo de sistemas Donella</h1>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-4 third">
+          <input type="file" id="codefile" accept="text/plain">
+          <button type="button" name="codesubmit" onclick="codeSubmit()">Submit</button>
+          <br/>
+          <textarea id="code"></textarea>
+        </div>
+        <div class="col-sm-4 third">
+          <div class="param">
+            <div id="stocks">
+              <h5>Stocks</h5>
+            </div>
+            <div id="flows">
+              <h5>Flows</h5>
+            </div>
+            <div id="vars">
+              <h5>Variables</h5>
+            </div>
           </div>
         </div>
+        <div class="col-sm-4 third">
+          Chart Memory<input type="number" id="memory" value="10">
+          <br>
+          Step<input type="number" id="step" value="1">
+          <br>
+          <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <div id="myChart"></canvas></div>
+          </div>
+          <button type="button" name="start" id="start" onclick="startInterval()">Start</button>
+          <button type="button" name="stop" id="stop" onclick="stop()">Stop</button>
+          <button type="button" name="restart" id="restart" onclick="restart()">Restart</button>
+        </div>
       </div>
-      <div class="third graph">
-      Chart Memory<input type="number" id="memory" value="10">
-      Step<input type="number" id="step" value="1">
-      <div class="chart-container" style="position: relative; height:40vh; width:80vw">
-        <div id="myChart"></canvas>
-      </div>
-      <button type="button" name="start" id="start" onclick="startInterval()">Start</button>
-      <button type="button" name="stop" id="start" onclick="clearInterval(myInterval)">Stop</button>
     </div>
-    </div>
+
     <script type="text/javascript" src="donella.js">
     </script>
     <script type="text/javascript">
@@ -90,7 +91,7 @@
         }
       };
       var data, ready, chart, time;
-      var allSt, allFl, allVr, myInterval;
+      var allSt, allFl, allVr, myInterval = undefined;
       function drawChart() {
         ready = false;
         button.disabled = true;
@@ -98,7 +99,9 @@
       }
 
       button.onclick = function() {
-        myInterval = setInterval(start, document.getElementById("step").value * 1000);
+        if(myInterval==undefined){
+          myInterval = setInterval(start, document.getElementById("step").value * 1000);
+        }
       }
       function start() {
         while(!ready);
@@ -147,6 +150,26 @@
           data.removeRow(0);
         }
         console.log("adding row " + time.toString());
+        drawChart();
+      }
+      function stop() {
+        clearInterval(myInterval);
+        myInterval = undefined;
+      }
+      function restart() {
+        stop();
+        chart.clearChart();
+        time = 0;
+        data.removeRows(0,data.getNumberOfRows());
+        for (var i = 0; i < allSt.length; i++) {
+          allSt[i].input.value = allSt[i].ini;
+        }
+        for (var i = 0; i < allFl.length; i++) {
+          allFl[i].input.value = allFl[i].ini;
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          allVr[i].input.value = allVr[i].ini;
+        }
         drawChart();
       }
       function init() {

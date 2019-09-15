@@ -1,0 +1,18 @@
+sistema {
+  stocks{
+    coelhos = 10
+  }
+  flows{
+    filhos_coelhos = 0
+  }
+  variables{
+    natalidade: 2,
+    capacity: 1000,
+    aumento: calc
+  }
+  relations{
+    filhos_coelhos = in(coelhos);
+    aumento = natalidade * coelhos * (1 - (coelhos/capacity)) - coelhos;
+    aumento ~ filhos_coelhos;
+  }
+}

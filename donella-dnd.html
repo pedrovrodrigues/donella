@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Donella</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style media="screen">
+      .third {
+        background-color: lightgrey;
+        height: auto;
+        border: 5px gold solid;
+      }
+      .row {
+        padding: -3%;
+      }
+      textarea {
+        width: 90%;
+        min-height: 300px;
+        height: auto;
+        max-height: 800px;
+      }
+      .param {
+        display: inline-block;
+      }
+      input {
+        display: inline;
+      }
+      .content{
+        height: 800px;
+      }
+      .builder{
+        height: 300px;
+      }
+      #buildcanvas {
+        padding: 10px;
+        border: 2px solid red;
+        border-radius: 5px;
+        height: 300px;
+        background-color: white;
+      }
+      #buildcanvas.over{
+        border-style: dashed;
+        background-color: #eeeeee;
+      }
+      #tools {
+        padding: 10px;
+        border: 2px solid black;
+        border-radius: 2px;
+        height: 300px;
+      }
+      .tool{
+        width: 5em;
+        margin: auto;
+      }
+      .tool * {
+        margin: auto;
+      }
+      .box{
+        min-height: 5em;
+        height: auto;
+        min-width: 5em;
+        width: auto;
+        background-color: white;
+        border-radius: 5px;
+        border: 3px solid black;
+      }
+      .builder {
+        height: 200px;
+      }
+      .arrow {
+        height: 50px;
+        width: 100px;
+      }
+      .cloud {
+        height: 5em;
+        width: 5em;
+      }
+      .var {
+        min-height: 5em;
+        height: auto;
+        min-width: 5em;
+        width: auto;
+        background-color: white;
+        border-radius: 5em;
+        border: 3px solid black;
+      }
+      span {
+        width: auto;
+        height: auto;
+        text-align: center;
+        margin: auto;
+      }
+      .ball {
+        height: 10px;
+        width: 10px;
+        border-radius: 5px;
+        border: 2px solid black;
+        margin: -5px;
+        background-color: white;
+      }
+      .ball.up{
+        position: absolute;
+        top: 0;
+        left: 2.5em;
+      }
+      .ball.down{
+        position: absolute;
+        top: 5em;
+        left: 2.5em;
+      }
+      .ball.right{
+        position: absolute;
+        top: 2.5em;
+        left: 5em;
+      }
+      .ball.left{
+        position: absolute;
+        top: 2.5em;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="jumbotron text-center">Simulador de modelo de sistemas Donella</h1>
+    <div class="container">
+      <div class="row third builder">
+        <div class="col-sm-2" id="tools">
+          <div class="tool box" draggable="true">
+            STOCK
+          </div>
+          <div class="tool cloud" draggable="true">
+            <img src="cloud.png" width="50px" height="50px">
+          </div>
+          <div class="tool var" draggable="true">
+            VARIABLE
+          </div>
+        </div>
+        <div class="col-sm-10" id="buildcanvas">
+
+        </div>
+      </div>
+      <button type="button" name="clearBuilder" onclick="clearBuilder()">Clear Builder</button>
+
+
+      <div class="row">
+        <div class="col-sm-6 third">
+          <div class="param">
+            <div id="stocks">
+              <h3>Stocks</h3>
+            </div>
+            <div id="flows">
+              <h3>Flows</h3>
+            </div>
+            <div id="vars">
+              <h3>Variables</h3>
+              <div class="newVarMenu">
+                <input type="text" id="newVarName" placeholder="varName">
+                Calculated?<input type="checkbox" id="newVarCalc" value="">
+                <button type="button" name="newvar" onclick="newVariable()">Add Variable</button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 third">
+          Chart Memory<input type="number" id="memory" value="10">
+          <br>
+          Step<input type="number" id="step" value="1">
+          <br>
+          <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <div id="myChart"></canvas></div>
+          </div>
+          <button type="button" name="start" id="start" onclick="startInterval()">Start</button>
+          <button type="button" name="stop" id="stop" onclick="stop()">Stop</button>
+          <button type="button" name="restart" id="restart" onclick="restart()">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="donella.js">
+    </script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(init);
+      var button = document.getElementById("start")
+      var options = {
+        width: 400,
+        height: 240,
+        curveType: 'function',
+        animation: {
+          duration: 100,
+          easing: 'linear'
+        },
+        legend: {
+          position: 'bottom'
+        }
+      };
+      var data, ready, chart, time, buildcanvas;
+      var allSt, allFl, allVr, myInterval = undefined;
+      function drawChart() {
+        ready = false;
+        button.disabled = true;
+        chart.draw(data, options);
+      }
+
+      button.onclick = function() {
+        if(myInterval==undefined){
+          myInterval = setInterval(start, document.getElementById("step").value * 1000);
+        }
+      }
+      function start() {
+        while(!ready);
+        console.log("ready!");
+        time++;
+        var row = [time];
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+        for (var i = 0; i < allSt.length; i++) {
+          row.push(parseFloat(allSt[i].input.value));
+        }
+        console.log(data);
+        console.log(row);
+        data.addRow(row);
+        for (var i = 0; i < allFl.length; i++) {
+          if (allFl[i].in != undefined) {
+            allFl[i].in.input.value = parseFloat(allFl[i].in.input.value) + parseFloat(allFl[i].input.value);
+          }
+          if (allFl[i].out != undefined) {
+            allFl[i].out.input.value = parseFloat(allFl[i].out.input.value) - parseFloat(allFl[i].input.value);
+          }
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          if (allVr[i].link != undefined) {
+            var inc;
+            if (allVr[i].type == 'fix') {
+              inc = parseFloat(allVr[i].input.value);
+            }
+            else{
+              // Calcular expressão
+              codigo = allVr[i].expression.split("");
+              nCode = 0;
+              carac = NovoCarac();
+              NovoAtomo();
+              inc = ExecExprSimples(true);
+              console.log(allVr[i].expression);
+              console.log(inc);
+            }
+            allVr[i].link.input.value = parseFloat(allVr[i].link.input.value) + inc;
+            allVr[i].link.input.value = inc;
+          }
+        }
+        mem = document.getElementById("memory").value;
+        if(data.getNumberOfRows() > mem){
+          data.removeRow(0);
+        }
+        console.log("adding row " + time.toString());
+        drawChart();
+      }
+      function stop() {
+        clearInterval(myInterval);
+        myInterval = undefined;
+      }
+      function restart() {
+        stop();
+        chart.clearChart();
+        time = 0;
+        data.removeRows(0,data.getNumberOfRows());
+        for (var i = 0; i < allSt.length; i++) {
+          allSt[i].input.value = allSt[i].ini;
+        }
+        for (var i = 0; i < allFl.length; i++) {
+          allFl[i].input.value = allFl[i].ini;
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          allVr[i].input.value = allVr[i].ini;
+        }
+        drawChart();
+      }
+      function init() {
+        data = new google.visualization.DataTable();
+        data.addColumn('number', 'Time');
+        //data.addColumn('number', 'PH');
+        time = 0;
+
+        chart = new google.visualization.LineChart(document.getElementById('myChart'));
+
+        google.visualization.events.addListener(chart, 'ready',
+            function() {
+              ready = true;
+              button.disabled = false;
+            });
+        drawChart();
+        var tools = document.querySelectorAll(".tool");
+        [].forEach.call(tools, function (tool) {
+          tool.addEventListener("dragstart", onDragStart, false);
+          tool.addEventListener("dragend", onDragEnd, false);
+        });
+
+        buildcanvas = document.getElementById("buildcanvas");
+        buildcanvas.addEventListener("dragenter", onDragEnter)
+        buildcanvas.addEventListener("dragover", onDragOver)
+        buildcanvas.addEventListener("dragleave", onDragLeave)
+        buildcanvas.addEventListener("drop", onDrop)
+
+      }
+      //var codeinput = document.getElementById("codefile");
+      //codeinput.addEventListener('change', getFile);
+      function getFile(event) {
+        const input = event.target;
+        if ('files' in input && input.files.length > 0) {
+          placeFileContent(
+            document.getElementById('code'),
+            input.files[0]);
+        }
+      }
+
+      function placeFileContent(target, file) {
+        readFileContent(file).then(content => {
+          target.value = content;
+        }).catch(error => console.log(error))
+      }
+
+      function readFileContent(file) {
+        const reader = new FileReader()
+        return new Promise((resolve, reject) => {
+          reader.onload = event => resolve(event.target.result)
+          reader.onerror = error => reject(error)
+          reader.readAsText(file)
+        })
+      }
+
+      function createBox(x, y, num) {
+        span = document.createElement("SPAN");
+        box = document.createElement("DIV");
+        box.setAttribute("id", "box"+num.toString());
+        box.classList.add("box");
+        box.style.position = "absolute";
+        box.style.top = y;
+        box.style.left = x;
+        box.style.zIndex = "5";
+        // Ball creation
+        directions = ["up", "down", "left", "right"];
+        for (var i = 0; i < directions.length; i++) {
+          ball = document.createElement("DIV")
+          ball.classList.add("ball");
+          ball.classList.add(directions[i]);
+          ball.addEventListener("mouseenter", onBallMouseEnter);
+          ball.addEventListener("mouseleave", onBallMouseLeave);
+          ball.addEventListener("mousedown", onBallMouseDown);
+          box.appendChild(ball);
+        }
+        // Span creation
+        span.contentEditable = true;
+        span.innerHTML = "Name";
+        span.style.position = "absolute";
+        span.style.top = "2em";
+        span.style.left = "0";
+        box.appendChild(span);
+        box.addEventListener("dragstart", onDragStart, false);
+        box.addEventListener("dragend", onDragEnd, false);
+        box.addEventListener("mouseup", onBuilderMouseUp, false);
+        span.addEventListener("blur", onBoxSpanChange, false);
+        span.focus();
+        return box;
+      }
+
+      function createCloud(x, y, num) {
+        box = document.createElement("DIV");
+        cloud = document.createElement("IMG");
+        box.setAttribute("id", "cloud"+num.toString());
+        dropNum++;
+        cloud.src = "cloud.png";
+        cloud.classList.add("cloud");
+        box.appendChild(cloud);
+        buildcanvas.appendChild(box);
+        box.style.position = "absolute";
+        box.style.top = y;
+        box.style.left = x;
+        box.style.zIndex = "5";
+        box.addEventListener("dragstart", onDragStart, false);
+        box.addEventListener("dragend", onDragEnd, false);
+        box.addEventListener("mouseup", onBuilderMouseUp, false);
+        return box;
+      }
+
+      function createVar(x, y, num) {
+        span = document.createElement("SPAN");
+        box = document.createElement("DIV");
+        box.setAttribute("id", "var"+num.toString());
+        box.classList.add("var");
+        box.style.position = "absolute";
+        box.style.top = y;
+        box.style.left = x;
+        box.style.zIndex = "5";
+        // Ball creation
+        directions = ["up", "down", "left", "right"];
+        for (var i = 0; i < directions.length; i++) {
+          ball = document.createElement("DIV")
+          ball.classList.add("ball");
+          ball.classList.add(directions[i]);
+          ball.addEventListener("mouseenter", onBallMouseEnter);
+          ball.addEventListener("mouseleave", onBallMouseLeave);
+          ball.addEventListener("mousedown", onBallMouseDown);
+          box.appendChild(ball);
+        }
+        // Span creation
+        span.contentEditable = true;
+        span.innerHTML = "Name";
+        span.style.position = "absolute";
+        span.style.top = "2em";
+        span.style.left = "0";
+        box.appendChild(span);
+        box.addEventListener("dragstart", onDragStart, false);
+        box.addEventListener("dragend", onDragEnd, false);
+        box.addEventListener("mouseup", onBuilderMouseUp, false);
+        span.addEventListener("blur", onVarSpanChange, false);
+        span.focus();
+        return box;
+      }
+
+      function onBoxSpanChange(e) {
+        this.contentEditable = false;
+        var stDiv = document.getElementById("stocks");
+        var newSt = new Stock(this.innerHTML);
+        var divI = document.createElement("DIV");
+        var pI = document.createElement("P");
+        var inputI = document.createElement("INPUT");
+        pI.innerHTML = newSt.name;
+        inputI.type = "number";
+        inputI.value = newSt.ini;
+        newSt.input = inputI;
+        divI.appendChild(pI);
+        divI.appendChild(inputI);
+        stDiv.appendChild(divI);
+        data.addColumn('number', newSt.name);
+      }
+      var dragX, dragY;
+      function onDragStart(e) {
+        this.style.opacity = 0.4;
+        rect = this.getBoundingClientRect();
+        if(this.classList.contains("tool")){
+          e.dataTransfer.effectAllowed = 'copy';
+        } else {
+          e.dataTransfer.effectAllowed = 'move';
+        }
+        dragX = e.pageX - rect.x - window.scrollX;
+        dragY = e.pageY - rect.y - window.scrollY;
+        console.log(dragX);
+        console.log(dragY);
+        if(this.classList.contains("box")){
+          e.dataTransfer.setData('text', "box");
+        } else if (this.classList.contains("arrow")){    e.dataTransfer.setData('text', "arrow"); }
+        else if (this.classList.contains("cloud")){    e.dataTransfer.setData('text', "cloud"); }
+      }
+      function onDragOver(e) {
+        if (e.preventDefault) {
+          e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'copy';
+        return false;
+      }
+      function onDragEnter(e) {
+        this.classList.add('over');
+      }
+      function onDragLeave(e) {
+        this.classList.remove('over');
+      }
+      var dropNum = 0;
+      function onDrop(e) {
+        if (e.stopPropagation) {
+          e.stopPropagation(); // stops the browser from redirecting.
+        }
+        var dropX, dropY;
+        rect = buildcanvas.getBoundingClientRect();
+        dropX = e.pageX - dragX - rect.x - window.scrollX;
+        dropX = dropX.toString() + "px";
+        console.log(dropX);
+        dropY = e.pageY - dragY - rect.y - window.scrollY;
+        dropY = dropY.toString() + "px";
+        console.log(dropY);
+        if (e.dataTransfer.getData("text") == "box") {
+          box = createBox(dropX, dropY, dropNum);
+          buildcanvas.appendChild(box);
+          dropNum++;
+        }
+        else if (e.dataTransfer.getData("text") == "cloud") {
+          cloud = createCloud(dropX, dropY, dropNum);
+          buildcanvas.appendChild(cloud);
+          dropNum++;
+        }
+        return false;
+      }
+      function onDragEnd(e) {
+        this.style.opacity = 1;
+        buildcanvas.classList.remove('over');
+      }
+
+      function onBallMouseEnter(e){
+        this.style.backgroundColor = "red";
+      }
+      function onBallMouseLeave(e){
+        this.style.backgroundColor = "white";
+      }
+      var mousedown = false;
+      var clickSrc = undefined;
+      function onBallMouseDown(e) {
+        mousedown = true;
+        clickSrc = this.parentElement;
+      }
+      function onBuilderMouseUp(e){
+        if(mousedown && clickSrc != undefined && this != clickSrc && this != buildcanvas){
+          console.log("Trying to connect divs:");
+          console.log(clickSrc.id);
+          console.log(this.id);
+          connectDivs(clickSrc.id, this.id, "orange", 0.5);
+          clickSrc = undefined;
+        }
+        mousedown = false;
+      }
+
+      function newVariable() {
+        var varDiv = document.getElementById("vars");
+        var varName = document.getElementById("newVarName").innerHTML;
+        var newVar = new Variable(varName);
+
+        var divI = document.createElement("DIV");
+        var pI = document.createElement("P");
+        var inputI = document.createElement("INPUT");
+
+        pI.innerHTML = allVr[i].name;
+        inputI.type = "text";
+        if(allVr[i].type == 'calc'){
+          inputI.value = allVr[i].expression;
+          inputI.disabled = true;
+        }
+        else if (allVr[i].type == 'fix') {
+          inputI.value = allVr[i].ini;
+        }
+
+        allVr[i].input = inputI;
+
+        divI.appendChild(pI);
+        divI.appendChild(inputI);
+        varDiv.appendChild(divI);
+
+        for (var i = 0; i < allVr.length; i++) {
+        }
+      }
+
+      function clearBuilder() {
+        c = buildcanvas.children;
+        for (var i = 0; i < c.length; i++) {
+          buildcanvas.removeChild(c[i]);
+        }
+        var svg = document.getElementById("svg-canvas");
+        svg.remove();
+       }
+
+      function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > milliseconds){
+            break;
+          }
+        }
+      }
+
+      function createSVG() {
+        var svg = document.getElementById("svg-canvas");
+        if (null == svg) {
+          svg = document.createElementNS("http://www.w3.org/2000/svg",
+                                         "svg");
+          svg.setAttribute('id', 'svg-canvas');
+          svg.setAttribute('style', 'position:absolute;top:0px;left:0px;pointer-events:none;');
+          svg.setAttribute('width', document.body.clientWidth);
+          svg.setAttribute('height', document.body.clientHeight);
+          svg.setAttributeNS("http://www.w3.org/2000/xmlns/",
+                             "xmlns:xlink",
+                             "http://www.w3.org/1999/xlink");
+          document.body.appendChild(svg);
+        }
+        return svg;
+      }
+      function drawCircle(x, y, radius, color) {
+        var svg = createSVG();
+  	    var shape = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        shape.setAttributeNS(null, "cx", x);
+        shape.setAttributeNS(null, "cy", y);
+        shape.setAttributeNS(null, "r",  radius);
+        shape.setAttributeNS(null, "fill", color);
+        svg.appendChild(shape);
+      }
+      function findAbsolutePosition(htmlElement) {
+        var x = htmlElement.offsetLeft;
+        var y = htmlElement.offsetTop;
+        for (var x=0, y=0, el=htmlElement;
+             el != null;
+             el = el.offsetParent) {
+               x += el.offsetLeft;
+               y += el.offsetTop;
+        }
+        return {
+            "x": x,
+            "y": y
+        };
+      }
+      function connectDivs(leftId, rightId, color, tension) {
+        var left = document.getElementById(leftId);
+        var right = document.getElementById(rightId);
+
+        var leftPos = findAbsolutePosition(left);
+        var x1 = leftPos.x;
+        var y1 = leftPos.y;
+        x1 += left.offsetWidth;
+        y1 += (left.offsetHeight / 2);
+
+        var rightPos = findAbsolutePosition(right);
+        var x2 = rightPos.x;
+        var y2 = rightPos.y;
+        y2 += (right.offsetHeight / 2);
+
+        var width=x2-x1;
+        var height = y2-y1;
+
+        drawCircle(x1, y1, 3, color);
+        drawCircle(x2, y2, 3, color);
+        drawCurvedLine(x1, y1, x2, y2, color, tension);
+      }
+      function drawCurvedLine(x1, y1, x2, y2, color, tension) {
+          var svg = createSVG();
+          var shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          if (tension<0) {
+              var delta = (y2-y1)*tension;
+              var hx1=x1;
+              var hy1=y1-delta;
+              var hx2=x2;
+              var hy2=y2+delta;
+              var path = "M " + x1 + " " + y1 +
+                        " C " + hx1 + " " + hy1 + " "
+                              + hx2 + " " + hy2 + " "
+                              + x2 + " " + y2;
+          } else {
+              var delta = (x2-x1)*tension;
+              var hx1=x1+delta;
+              var hy1=y1;
+              var hx2=x2-delta;
+              var hy2=y2;
+              var path = "M " + x1 + " " + y1 +
+                        " C " + hx1 + " " + hy1 + " "
+                              + hx2 + " " + hy2 + " "
+                              + x2 + " " + y2;
+          }
+          shape.setAttributeNS(null, "d", path);
+          shape.setAttributeNS(null, "fill", "none");
+          shape.setAttributeNS(null, "stroke", color);
+          svg.appendChild(shape);
+      }
+
+      function codeSubmit() {
+        var txt = document.getElementById("code").value;
+        console.log(txt);
+        [allSt, allFl, allVr] = main(txt);
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+
+        var stDiv = document.getElementById("stocks");
+        for (var i = 0; i < allSt.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allSt[i].name;
+          inputI.type = "text";
+          inputI.value = allSt[i].ini;
+
+          allSt[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          stDiv.appendChild(divI);
+
+          data.addColumn('number', allSt[i].name);
+        }
+        drawChart();
+        var flDiv = document.getElementById("flows");
+        for (var i = 0; i < allFl.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allFl[i].name;
+          inputI.type = "text";
+          inputI.value = allFl[i].ini;
+
+          allFl[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          flDiv.appendChild(divI);
+        }
+
+        var varDiv = document.getElementById("vars");
+        for (var i = 0; i < allVr.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allVr[i].name;
+          inputI.type = "text";
+          if(allVr[i].type == 'calc'){
+            inputI.value = allVr[i].expression;
+            inputI.disabled = true;
+          }
+          else if (allVr[i].type == 'fix') {
+            inputI.value = allVr[i].ini;
+          }
+
+          allVr[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          varDiv.appendChild(divI);
+        }
+
+      }
+    </script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ sistema {
     ix = in(x);
     zo = out(z);
 
-    del = 2*x-2*y;
+    del = 2*x - 2*y;
     sum = y + z/2;
     del ~ xy;
     sum ~ yz;
