@@ -169,7 +169,11 @@
         <div class="col-9 ml-3" id="buildcanvas">
         </div>
       </div>
-      <button type="button" name="clearBuilder" onclick="clearBuilder()">Clear Builder</button>
+      <div class="row justify-content-end">
+        <div class="col-2">
+          <button type="button" name="clearBuilder" onclick="clearBuilder()">Clear Builder</button>
+        </div>
+      </div>
 
       <div class="row">
         <div class="col-sm-6 third">
@@ -413,6 +417,7 @@
           ball.addEventListener("mousedown", onBallMouseDown);
           box.appendChild(ball);
         }
+        box.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.style.position = "absolute";
         box.style.top = y;
         box.style.left = x;
@@ -483,6 +488,7 @@
         span.style.position = "absolute";
         span.style.top = "2em";
         span.style.left = "0";
+        box.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.style.position = "absolute";
         box.style.top = y;
         box.style.left = x;
