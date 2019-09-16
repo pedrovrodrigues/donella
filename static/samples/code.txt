@@ -1,0 +1,27 @@
+sistema {
+  stocks{
+    x = 10, y = 10, z = 10
+  }
+  flows{
+    xy = 3, yz = 2, ix = 1, zo = 10
+  }
+  variables{
+    del: calc,
+    sum: calc,
+    d: 2
+  }
+  relations{
+    xy = out(x);
+    xy = in(y);
+    yz = out(y);
+    yz = in(z);
+    ix = in(x);
+    zo = out(z);
+
+    del = 2*x - 2*y;
+    sum = y + z/2;
+    del ~ xy;
+    sum ~ yz;
+    d ~ ix;
+  }
+}
