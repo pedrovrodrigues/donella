@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Donella</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style media="screen">
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="#">Navbar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/donella-dnd">Drag and drop <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/donella-code">Code <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/specifications">Specifications</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container">
+      <h1 class="jumbotron text-center">Linguagem de especificação de modelagem de sistemas Donella</h1>
+      <p class="jumbotron text-justify">
+<b>Especificações léxicas:</b><br>
+<br>
+&emsp;<b>Palavras Reservadas:</b><br>
+&emsp;&emsp;stocks,     ---------------------- palavra que abre o bloco de declarações de stocks<br>
+&emsp;&emsp;flows,      ---------------------- palavra que abre o bloco de declarações de flows<br>
+&emsp;&emsp;variables,  ---------------------- palavra que abre o bloco de declarações de variáveis<br>
+&emsp;&emsp;relations,  ---------------------- palavra que abre o bloco de declarações de relações<br>
+&emsp;&emsp;out,        ---------------------- operador que indica que um flow sai de um stock (flow = out(stock))<br>
+&emsp;&emsp;in,         ---------------------- operador que indica que um flow entra num stock (flow = in(stock))<br>
+&emsp;&emsp;calc,       ---------------------- valor usado na declaração de variáveis para indicar que ela representará uma expressão a ser calculada<br>
+&emsp;&emsp;fix         ---------------------- valor usado na declaração de variáveis para indicar que ela representará uma expressão a ser calculada<br>
+<br>
+&emsp;<b>Símbolos:</b><br>
+&emsp;&emsp;{ } , : ; = ( ) ~<br>
+&emsp;&emsp;+ - * / ^<br>
+&emsp;<b>Regex:</b><br>
+&emsp;&emsp;ID = [a-zA-z][a-zA-z0-9_]*<br>
+&emsp;&emsp;INTCT = -?[0-9]+<br>
+&emsp;&emsp;FLOATCT = ***** A ser adicionado à linguagem *****<br>
+<br>
+<b>Especificações sintáticas:</b><br>
+&emsp;Program: ID { StockDecl FlowDecl VarDecl RelDecl }<br>
+&emsp;StockDecl: STOCKS { ListId }<br>
+&emsp;FlowDecl: FLOWS { ListId }<br>
+&emsp;VarDecl: VARS { ListVar }<br>
+&emsp;RelDecl: RELATIONS { ListRel }<br>
+&emsp;ListId: ID | ID = INTCT |  ListId , ID | ListId , ID = INTCT<br>
+&emsp;ListVar: Var | Var ListVar<br>
+&emsp;Var: ID : CALC | ID : FIX | ID : INTCT<br>
+&emsp;ListRel: Rel; ListRel | ε<br>
+&emsp;Rel: ID = Expression |<br>
+&emsp;&emsp;&emsp;ID ~ ID<br>
+&emsp;Expression: IN(ID) | OUT(ID) | ExprSimples<br>
+&emsp;ExprSimples: Term | Term OPAD ExprSimples<br>
+&emsp;Term: Fat | Fat OPMULT Term<br>
+&emsp;Fat: INTCT | ID | ID ^ Fat | (ExprSimples) | - Fat<br>
+<br>
+<b>Especificações semânticas:</b><br>
+&emsp;***** A serem implementadas *****<br>
+<br>
+      </p> 
+    </div>
+  </body>
+</html>

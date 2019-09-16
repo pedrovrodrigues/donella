@@ -14,5 +14,9 @@ def donella_dnd():
 def donella_code():
     return render_template('donella.html')
 
+@app.route('/specifications')
+def specifications():
+    return render_template('specifications.html')
+
 if __name__ == '__main__':
     app.run()
