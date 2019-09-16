@@ -270,12 +270,12 @@
             }
             else{
               // Calcular expressão
-              codigo = allVr[i].expression.split("");
+              codigo = allVr[i].input.value.split("");
               nCode = 0;
               carac = NovoCarac();
               NovoAtomo();
               inc = ExecExprSimples(true);
-              console.log(allVr[i].expression);
+              console.log(allVr[i].input.value);
               console.log(inc);
             }
             allVr[i].link.input.value = parseFloat(allVr[i].link.input.value) + inc;
@@ -749,13 +749,11 @@
               }
             }
 
-            if(thisElement.link == undefined){
-              thisElement.link = srcElement;
-              console.log("Trying to connect var-flow:");
-              console.log(clickSrc.id);
-              console.log(this.id);
-              connectDivs(clickSrc.id, this.id, "orange", 1);
-            }
+            thisElement.link = srcElement;
+            console.log("Trying to connect var-flow:");
+            console.log(clickSrc.id);
+            console.log(this.id);
+            connectDivs(clickSrc.id, this.id, "orange", 1);
           }
 
 
