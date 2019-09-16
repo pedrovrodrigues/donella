@@ -50,10 +50,6 @@
         border-radius: 2px;
         height: 300px;
       }
-      .tool{
-        width: 5em;
-        margin: auto;
-      }
       .tool * {
         margin: auto;
       }
@@ -86,11 +82,24 @@
         border-radius: 5em;
         border: 3px solid black;
       }
+      .tap{
+        height: 5em;
+        width: 5em;
+      }
+      .tool{
+        width: 5em;
+        margin: auto;
+      }
       span {
+        position: absolute;
+        top: 2.5em;
         width: auto;
         height: auto;
         text-align: center;
         margin: auto;
+      }
+      .tap span{
+        color: orange;
       }
       .ball {
         height: 10px;
@@ -431,6 +440,42 @@
         return box;
       }
 
+      function createTap(x, y, num, name) {
+        span = document.createElement("SPAN");
+        box = document.createElement("DIV");
+        tap = document.createElement("IMG");
+        box.setAttribute("id", "tap"+num.toString());
+        dropNum++;
+        tap.src = "images\\tap.png";
+        tap.classList.add("tap");
+        box.classList.add("tap");
+        box.appendChild(tap);
+        // Ball creation
+        directions = ["up", "down", "left", "right"];
+        for (var i = 0; i < directions.length; i++) {
+          ball = document.createElement("DIV")
+          ball.classList.add("ball");
+          ball.classList.add(directions[i]);
+          ball.addEventListener("mouseenter", onBallMouseEnter);
+          ball.addEventListener("mouseleave", onBallMouseLeave);
+          ball.addEventListener("mousedown", onBallMouseDown);
+          box.appendChild(ball);
+        }
+        span.innerHTML = name;
+        span.style.position = "absolute";
+        span.style.top = "2em";
+        span.style.left = "0";
+        box.style.position = "absolute";
+        box.style.top = y;
+        box.style.left = x;
+        box.style.zIndex = "5";
+        box.appendChild(span);
+        box.addEventListener("dragstart", onDragStart, false);
+        box.addEventListener("dragend", onDragEnd, false);
+        box.addEventListener("mouseup", onBuilderMouseUp, false);
+        return box;
+      }
+
       function onBoxSpanChange(e) {
         this.contentEditable = false;
         var stDiv = document.getElementById("stocks");
@@ -582,10 +627,6 @@
           if((clickSrc.classList.contains("box") || clickSrc.classList.contains("cloud"))
           && (this.classList.contains("box") || this.classList.contains("cloud"))
           && (clickSrc.classList.contains("box") || this.classList.contains("box"))){
-            console.log("Trying to connect stocks:");
-            console.log(clickSrc.id);
-            console.log(this.id);
-            connectDivs(clickSrc.id, this.id, "blue", 1);
             var srcName, srcElement, thisName, thisElement;
             c = clickSrc.children
             for (var i = 0; i < c.length; i++) {
@@ -614,22 +655,35 @@
               }
             }
 
-            var flDiv = document.getElementById("flows");
-            var newFl = new Flow(srcName + "-" + thisName);
-            var divI = document.createElement("DIV");
-            var pI = document.createElement("P");
-            var inputI = document.createElement("INPUT");
-            pI.innerHTML = newFl.name;
-            inputI.type = "text";
-            inputI.value = newFl.ini;
-            newFl.input = inputI;
-            newFl.out = srcElement;
-            newFl.in = thisElement;
-            divI.appendChild(pI);
-            divI.appendChild(inputI);
-            flDiv.appendChild(divI);
-            allFl.push(newFl);
+            repeat = false;
+            for (var i = 0; i < allFl.length; i++) {
+              if(allFl[i].in == thisElement && allFl[i].out == srcElement){
+                repeat = true;
+              }
+            }
+            if(!repeat){
+              var flDiv = document.getElementById("flows");
+              var newFl = new Flow(srcName + "-" + thisName);
+              var divI = document.createElement("DIV");
+              var pI = document.createElement("P");
+              var inputI = document.createElement("INPUT");
+              pI.innerHTML = newFl.name;
+              inputI.type = "text";
+              inputI.value = newFl.ini;
+              newFl.input = inputI;
+              newFl.out = srcElement;
+              newFl.in = thisElement;
+              divI.appendChild(pI);
+              divI.appendChild(inputI);
+              flDiv.appendChild(divI);
+              allFl.push(newFl);
 
+              console.log("Trying to connect stocks:");
+              console.log(clickSrc.id);
+              console.log(this.id);
+              connectDivs(clickSrc.id, this.id, "blue", 1, newFl.name);
+
+            }
           }
 
           clickSrc = undefined;
@@ -713,7 +767,7 @@
             "y": y
         };
       }
-      function connectDivs(leftId, rightId, color, tension) {
+      function connectDivs(leftId, rightId, color, tension, name) {
         var left = document.getElementById(leftId);
         var right = document.getElementById(rightId);
 
@@ -733,6 +787,14 @@
 
         drawCircle(x1, y1, 3, color);
         drawCircle(x2, y2, 3, color);
+        rect = buildcanvas.getBoundingClientRect();
+        tapX = (leftPos.x+rightPos.x)/2 - window.scrollX - rect.x;
+        tapX = tapX.toString() + "px";
+        tapY = (leftPos.y+rightPos.y)/2 - window.scrollY - rect.y;
+        tapY = tapY.toString() + "px";
+        box = createTap(tapX, tapY, dropNum, name);
+        buildcanvas.appendChild(box);
+        dropNum++;
         drawCurvedLine(x1, y1, x2, y2, color, tension);
       }
       function drawCurvedLine(x1, y1, x2, y2, color, tension) {
