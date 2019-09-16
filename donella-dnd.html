@@ -67,7 +67,7 @@
         border: 3px solid black;
       }
       .builder {
-        height: 200px;
+        height: 310px;
       }
       .arrow {
         height: 50px;
@@ -155,12 +155,11 @@
             </div>
             <div id="vars">
               <h3>Variables</h3>
-              <div class="newVarMenu">
+              <!-- <div class="newVarMenu">
                 <input type="text" id="newVarName" placeholder="varName">
                 Calculated?<input type="checkbox" id="newVarCalc" value="">
                 <button type="button" name="newvar" onclick="newVariable()">Add Variable</button>
-
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -198,7 +197,7 @@
         }
       };
       var data, ready, chart, time, buildcanvas;
-      var allSt, allFl, allVr, myInterval = undefined;
+      var allSt = [], allFl = [], allVr = [], myInterval = undefined;
       function drawChart() {
         ready = false;
         button.disabled = true;
@@ -374,8 +373,19 @@
         dropNum++;
         cloud.src = "cloud.png";
         cloud.classList.add("cloud");
+        box.classList.add("cloud");
         box.appendChild(cloud);
-        buildcanvas.appendChild(box);
+        // Ball creation
+        directions = ["up", "down", "left", "right"];
+        for (var i = 0; i < directions.length; i++) {
+          ball = document.createElement("DIV")
+          ball.classList.add("ball");
+          ball.classList.add(directions[i]);
+          ball.addEventListener("mouseenter", onBallMouseEnter);
+          ball.addEventListener("mouseleave", onBallMouseLeave);
+          ball.addEventListener("mousedown", onBallMouseDown);
+          box.appendChild(ball);
+        }
         box.style.position = "absolute";
         box.style.top = y;
         box.style.left = x;
@@ -424,6 +434,12 @@
       function onBoxSpanChange(e) {
         this.contentEditable = false;
         var stDiv = document.getElementById("stocks");
+        for (var i = 0; i < allSt.length; i++) {
+          if(allSt[i].name == this.innerHTML){
+            this.innerHTML = this.innerHTML + "1";
+            i = -1;
+          }
+        }
         var newSt = new Stock(this.innerHTML);
         var divI = document.createElement("DIV");
         var pI = document.createElement("P");
@@ -436,6 +452,30 @@
         divI.appendChild(inputI);
         stDiv.appendChild(divI);
         data.addColumn('number', newSt.name);
+        allSt.push(newSt);
+        drawChart();
+      }
+      function onVarSpanChange(e) {
+        this.contentEditable = false;
+        for (var i = 0; i < allVr.length; i++) {
+          if(allVr[i].name == this.innerHTML){
+            this.innerHTML = this.innerHTML + "1";
+            i = -1;
+          }
+        }
+        var vrDiv = document.getElementById("vars");
+        var newVr = new Variable(this.innerHTML);
+        var divI = document.createElement("DIV");
+        var pI = document.createElement("P");
+        var inputI = document.createElement("INPUT");
+        pI.innerHTML = newVr.name;
+        inputI.type = "text";
+        inputI.value = newVr.ini;
+        newVr.input = inputI;
+        divI.appendChild(pI);
+        divI.appendChild(inputI);
+        vrDiv.appendChild(divI);
+        allVr.push(newVr);
       }
       var dragX, dragY;
       function onDragStart(e) {
@@ -454,6 +494,7 @@
           e.dataTransfer.setData('text', "box");
         } else if (this.classList.contains("arrow")){    e.dataTransfer.setData('text', "arrow"); }
         else if (this.classList.contains("cloud")){    e.dataTransfer.setData('text', "cloud"); }
+        else if (this.classList.contains("var")){    e.dataTransfer.setData('text', "var"); }
       }
       function onDragOver(e) {
         if (e.preventDefault) {
@@ -484,11 +525,37 @@
         if (e.dataTransfer.getData("text") == "box") {
           box = createBox(dropX, dropY, dropNum);
           buildcanvas.appendChild(box);
+          c = box.children;
+          for (var i = 0; i < c.length; i++) {
+            if(c[i].tagName == "SPAN"){
+              c[i].focus();
+              break;
+            }
+          }
           dropNum++;
         }
         else if (e.dataTransfer.getData("text") == "cloud") {
           cloud = createCloud(dropX, dropY, dropNum);
           buildcanvas.appendChild(cloud);
+          c = cloud.children;
+          for (var i = 0; i < c.length; i++) {
+            if(c[i].tagName == "SPAN"){
+              c[i].focus();
+              break;
+            }
+          }
+          dropNum++;
+        }
+        else if (e.dataTransfer.getData("text") == "var") {
+          varbox = createVar(dropX, dropY, dropNum);
+          buildcanvas.appendChild(varbox);
+          c = varbox.children;
+          for (var i = 0; i < c.length; i++) {
+            if(c[i].tagName == "SPAN"){
+              c[i].focus();
+              break;
+            }
+          }
           dropNum++;
         }
         return false;
@@ -512,51 +579,90 @@
       }
       function onBuilderMouseUp(e){
         if(mousedown && clickSrc != undefined && this != clickSrc && this != buildcanvas){
-          console.log("Trying to connect divs:");
-          console.log(clickSrc.id);
-          console.log(this.id);
-          connectDivs(clickSrc.id, this.id, "orange", 0.5);
+          if((clickSrc.classList.contains("box") || clickSrc.classList.contains("cloud"))
+          && (this.classList.contains("box") || this.classList.contains("cloud"))
+          && (clickSrc.classList.contains("box") || this.classList.contains("box"))){
+            console.log("Trying to connect stocks:");
+            console.log(clickSrc.id);
+            console.log(this.id);
+            connectDivs(clickSrc.id, this.id, "blue", 1);
+            var srcName, srcElement, thisName, thisElement;
+            c = clickSrc.children
+            for (var i = 0; i < c.length; i++) {
+              if(c[i].tagName == "SPAN"){
+                srcName = c[i].innerHTML;
+                for (var i = 0; i < allSt.length; i++) {
+                  if(allSt[i].name == srcName){
+                    srcElement = allSt[i];
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+            c = this.children
+            for (var i = 0; i < c.length; i++) {
+              if(c[i].tagName == "SPAN"){
+                thisName = c[i].innerHTML;
+                for (var i = 0; i < allSt.length; i++) {
+                  if(allSt[i].name == thisName){
+                    thisElement = allSt[i];
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+
+            var flDiv = document.getElementById("flows");
+            var newFl = new Flow(srcName + "-" + thisName);
+            var divI = document.createElement("DIV");
+            var pI = document.createElement("P");
+            var inputI = document.createElement("INPUT");
+            pI.innerHTML = newFl.name;
+            inputI.type = "text";
+            inputI.value = newFl.ini;
+            newFl.input = inputI;
+            newFl.out = srcElement;
+            newFl.in = thisElement;
+            divI.appendChild(pI);
+            divI.appendChild(inputI);
+            flDiv.appendChild(divI);
+            allFl.push(newFl);
+
+          }
+
           clickSrc = undefined;
         }
         mousedown = false;
       }
 
-      function newVariable() {
-        var varDiv = document.getElementById("vars");
-        var varName = document.getElementById("newVarName").innerHTML;
-        var newVar = new Variable(varName);
-
-        var divI = document.createElement("DIV");
-        var pI = document.createElement("P");
-        var inputI = document.createElement("INPUT");
-
-        pI.innerHTML = allVr[i].name;
-        inputI.type = "text";
-        if(allVr[i].type == 'calc'){
-          inputI.value = allVr[i].expression;
-          inputI.disabled = true;
-        }
-        else if (allVr[i].type == 'fix') {
-          inputI.value = allVr[i].ini;
-        }
-
-        allVr[i].input = inputI;
-
-        divI.appendChild(pI);
-        divI.appendChild(inputI);
-        varDiv.appendChild(divI);
-
-        for (var i = 0; i < allVr.length; i++) {
-        }
-      }
-
       function clearBuilder() {
         c = buildcanvas.children;
-        for (var i = 0; i < c.length; i++) {
-          buildcanvas.removeChild(c[i]);
+        while(buildcanvas.children.length > 0){
+          buildcanvas.removeChild(buildcanvas.children[0]);
         }
         var svg = document.getElementById("svg-canvas");
-        svg.remove();
+        if(svg != undefined){
+          svg.remove();
+        }
+        var stDiv = document.getElementById("stocks");
+        while(stDiv.children.length > 1){
+          stDiv.removeChild(stDiv.children[1]);
+        }
+        allSt = [];
+        data.removeColumns(1, data.getNumberOfColumns()-1);
+        drawChart();
+        var flDiv = document.getElementById("flows");
+        while(flDiv.children.length > 1){
+          flDiv.removeChild(flDiv.children[1]);
+        }
+        allFl = [];
+        var vrDiv = document.getElementById("vars");
+        while(vrDiv.children.length > 1){
+          vrDiv.removeChild(vrDiv.children[1]);
+        }
+        allVr = [];
        }
 
       function sleep(milliseconds) {
