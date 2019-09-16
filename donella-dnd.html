@@ -140,7 +140,7 @@
             STOCK
           </div>
           <div class="tool cloud" draggable="true">
-            <img src="cloud.png" width="50px" height="50px">
+            <img src="images\\cloud.png" width="50px" height="50px">
           </div>
           <div class="tool var" draggable="true">
             VARIABLE
@@ -380,7 +380,7 @@
         cloud = document.createElement("IMG");
         box.setAttribute("id", "cloud"+num.toString());
         dropNum++;
-        cloud.src = "cloud.png";
+        cloud.src = "images\\cloud.png";
         cloud.classList.add("cloud");
         box.classList.add("cloud");
         box.appendChild(cloud);
@@ -624,6 +624,7 @@
       }
       function onBuilderMouseUp(e){
         if(mousedown && clickSrc != undefined && this != clickSrc && this != buildcanvas){
+          // lIGAÇÃO BOX-BOX OU BOX-CLOUD
           if((clickSrc.classList.contains("box") || clickSrc.classList.contains("cloud"))
           && (this.classList.contains("box") || this.classList.contains("cloud"))
           && (clickSrc.classList.contains("box") || this.classList.contains("box"))){
@@ -681,10 +682,60 @@
               console.log("Trying to connect stocks:");
               console.log(clickSrc.id);
               console.log(this.id);
-              connectDivs(clickSrc.id, this.id, "blue", 1, newFl.name);
+              connectDivs(clickSrc.id, this.id, "blue", 1);
+
+              rect = buildcanvas.getBoundingClientRect();
+              leftPos = findAbsolutePosition(clickSrc);
+              rightPos = findAbsolutePosition(this);
+              tapX = (leftPos.x+rightPos.x)/2 - window.scrollX - rect.x;
+              tapX = tapX.toString() + "px";
+              tapY = (leftPos.y+rightPos.y)/2 - window.scrollY - rect.y;
+              tapY = tapY.toString() + "px";
+              box = createTap(tapX, tapY, dropNum, newFl.name);
+              buildcanvas.appendChild(box);
+              dropNum++;
 
             }
           }
+          // lIGAÇÃO VAR-TAP
+          if(clickSrc.classList.contains("var") && this.classList.contains("tap")){
+            var srcName, srcElement, thisName, thisElement;
+            c = clickSrc.children
+            for (var i = 0; i < c.length; i++) {
+              if(c[i].tagName == "SPAN"){
+                srcName = c[i].innerHTML;
+                for (var i = 0; i < allVr.length; i++) {
+                    if(allVr[i].name == srcName){
+                      srcElement = allVr[i];
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+            c = this.children
+            for (var i = 0; i < c.length; i++) {
+              if(c[i].tagName == "SPAN"){
+                thisName = c[i].innerHTML;
+                for (var i = 0; i < allFl.length; i++) {
+                  if(allFl[i].name == thisName){
+                    thisElement = allFl[i];
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+
+            if(thisElement.link == undefined){
+              thisElement.link = srcElement;
+              console.log("Trying to connect var-flow:");
+              console.log(clickSrc.id);
+              console.log(this.id);
+              connectDivs(clickSrc.id, this.id, "orange", 1);
+            }
+          }
+
 
           clickSrc = undefined;
         }
@@ -767,7 +818,7 @@
             "y": y
         };
       }
-      function connectDivs(leftId, rightId, color, tension, name) {
+      function connectDivs(leftId, rightId, color, tension) {
         var left = document.getElementById(leftId);
         var right = document.getElementById(rightId);
 
@@ -787,14 +838,6 @@
 
         drawCircle(x1, y1, 3, color);
         drawCircle(x2, y2, 3, color);
-        rect = buildcanvas.getBoundingClientRect();
-        tapX = (leftPos.x+rightPos.x)/2 - window.scrollX - rect.x;
-        tapX = tapX.toString() + "px";
-        tapY = (leftPos.y+rightPos.y)/2 - window.scrollY - rect.y;
-        tapY = tapY.toString() + "px";
-        box = createTap(tapX, tapY, dropNum, name);
-        buildcanvas.appendChild(box);
-        dropNum++;
         drawCurvedLine(x1, y1, x2, y2, color, tension);
       }
       function drawCurvedLine(x1, y1, x2, y2, color, tension) {
