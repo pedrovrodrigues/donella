@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Donella</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style media="screen">
+      .third {
+        background-color: lightgrey;
+        height: auto;
+        border: 5px gold solid;
+      }
+      .row {
+        padding: -3%;
+      }
+      textarea {
+        width: 90%;
+        min-height: 300px;
+        height: auto;
+        max-height: 800px;
+      }
+      .param {
+        display: inline-block;
+      }
+      input {
+        display: inline;
+      }
+      .content{
+        height: 800px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="jumbotron text-center">Simulador de modelo de sistemas Donella</h1>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-4 third">
+          <input type="file" id="codefile" accept="text/plain">
+          <button type="button" name="codesubmit" onclick="codeSubmit()">Submit</button>
+          <br/>
+          <textarea id="code"></textarea>
+        </div>
+        <div class="col-sm-4 third">
+          <div class="param">
+            <div id="stocks">
+              <h5>Stocks</h5>
+            </div>
+            <div id="flows">
+              <h5>Flows</h5>
+            </div>
+            <div id="vars">
+              <h5>Variables</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4 third">
+          Chart Memory<input type="number" id="memory" value="10">
+          <br>
+          Step<input type="number" id="step" value="1">
+          <br>
+          <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <div id="myChart"></canvas></div>
+          </div>
+          <button type="button" name="start" id="start" onclick="startInterval()">Start</button>
+          <button type="button" name="stop" id="stop" onclick="stop()">Stop</button>
+          <button type="button" name="restart" id="restart" onclick="restart()">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="donella.js">
+    </script>
+    <script type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(init);
+      var button = document.getElementById("start")
+      var options = {
+        width: 400,
+        height: 240,
+        curveType: 'function',
+        animation: {
+          duration: 100,
+          easing: 'linear'
+        },
+        legend: {
+          position: 'bottom'
+        }
+      };
+      var data, ready, chart, time;
+      var allSt, allFl, allVr, myInterval = undefined;
+      function drawChart() {
+        ready = false;
+        button.disabled = true;
+        chart.draw(data, options);
+      }
+
+      button.onclick = function() {
+        if(myInterval==undefined){
+          myInterval = setInterval(start, document.getElementById("step").value * 1000);
+        }
+      }
+      function start() {
+        while(!ready);
+        console.log("ready!");
+        time++;
+        var row = [time];
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+        for (var i = 0; i < allSt.length; i++) {
+          row.push(parseFloat(allSt[i].input.value));
+        }
+        console.log(data);
+        console.log(row);
+        data.addRow(row);
+        for (var i = 0; i < allFl.length; i++) {
+          if (allFl[i].in != undefined) {
+            allFl[i].in.input.value = parseFloat(allFl[i].in.input.value) + parseFloat(allFl[i].input.value);
+          }
+          if (allFl[i].out != undefined) {
+            allFl[i].out.input.value = parseFloat(allFl[i].out.input.value) - parseFloat(allFl[i].input.value);
+          }
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          if (allVr[i].link != undefined) {
+            var inc;
+            if (allVr[i].type == 'fix') {
+              inc = parseFloat(allVr[i].input.value);
+            }
+            else{
+              // Calcular expressão
+              codigo = allVr[i].expression.split("");
+              nCode = 0;
+              carac = NovoCarac();
+              NovoAtomo();
+              inc = ExecExprSimples(true);
+              console.log(allVr[i].expression);
+              console.log(inc);
+            }
+            allVr[i].link.input.value = parseFloat(allVr[i].link.input.value) + inc;
+            allVr[i].link.input.value = inc;
+          }
+        }
+        mem = document.getElementById("memory").value;
+        if(data.getNumberOfRows() > mem){
+          data.removeRow(0);
+        }
+        console.log("adding row " + time.toString());
+        drawChart();
+      }
+      function stop() {
+        clearInterval(myInterval);
+        myInterval = undefined;
+      }
+      function restart() {
+        stop();
+        chart.clearChart();
+        time = 0;
+        data.removeRows(0,data.getNumberOfRows());
+        for (var i = 0; i < allSt.length; i++) {
+          allSt[i].input.value = allSt[i].ini;
+        }
+        for (var i = 0; i < allFl.length; i++) {
+          allFl[i].input.value = allFl[i].ini;
+        }
+        for (var i = 0; i < allVr.length; i++) {
+          allVr[i].input.value = allVr[i].ini;
+        }
+        drawChart();
+      }
+      function init() {
+        data = new google.visualization.DataTable();
+        data.addColumn('number', 'Time');
+        //data.addColumn('number', 'PH');
+        time = 0;
+
+        chart = new google.visualization.LineChart(document.getElementById('myChart'));
+
+        google.visualization.events.addListener(chart, 'ready',
+            function() {
+              ready = true;
+              button.disabled = false;
+            });
+        drawChart();
+
+        var codeinput = document.getElementById("codefile");
+        codeinput.addEventListener('change', getFile);
+        function getFile(event) {
+        	const input = event.target;
+          if ('files' in input && input.files.length > 0) {
+        	  placeFileContent(
+              document.getElementById('code'),
+              input.files[0]);
+          }
+        }
+
+        function placeFileContent(target, file) {
+        	readFileContent(file).then(content => {
+          	target.value = content;
+          }).catch(error => console.log(error))
+        }
+
+        function readFileContent(file) {
+        	const reader = new FileReader()
+          return new Promise((resolve, reject) => {
+            reader.onload = event => resolve(event.target.result)
+            reader.onerror = error => reject(error)
+            reader.readAsText(file)
+          })
+        }
+      }
+      function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > milliseconds){
+            break;
+          }
+        }
+      }
+
+      function codeSubmit() {
+        var txt = document.getElementById("code").value;
+        console.log(txt);
+        [allSt, allFl, allVr] = main(txt);
+        console.log(allSt);
+        console.log(allFl);
+        console.log(allVr);
+
+        var stDiv = document.getElementById("stocks");
+        for (var i = 0; i < allSt.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allSt[i].name;
+          inputI.type = "text";
+          inputI.value = allSt[i].ini;
+
+          allSt[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          stDiv.appendChild(divI);
+
+          data.addColumn('number', allSt[i].name);
+        }
+        drawChart();
+        var flDiv = document.getElementById("flows");
+        for (var i = 0; i < allFl.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allFl[i].name;
+          inputI.type = "text";
+          inputI.value = allFl[i].ini;
+
+          allFl[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          flDiv.appendChild(divI);
+        }
+
+        var varDiv = document.getElementById("vars");
+        for (var i = 0; i < allVr.length; i++) {
+          var divI = document.createElement("DIV");
+          var pI = document.createElement("P");
+          var inputI = document.createElement("INPUT");
+
+          pI.innerHTML = allVr[i].name;
+          inputI.type = "text";
+          if(allVr[i].type == 'calc'){
+            inputI.value = allVr[i].expression;
+            inputI.disabled = true;
+          }
+          else if (allVr[i].type == 'fix') {
+            inputI.value = allVr[i].ini;
+          }
+
+          allVr[i].input = inputI;
+
+          divI.appendChild(pI);
+          divI.appendChild(inputI);
+          varDiv.appendChild(divI);
+        }
+
+      }
+    </script>
+  </body>
+</html>

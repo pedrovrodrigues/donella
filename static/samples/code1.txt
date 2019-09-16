@@ -1,0 +1,23 @@
+sistema {
+  stocks{
+    x = 1000, y = -1000
+  }
+  flows{
+    xy = 0, yx = 0
+  }
+  variables{
+    delxy: calc,
+    delyx: calc
+  }
+  relations{
+    xy = out(x);
+    xy = in(y);
+    yx = out(y);
+    yx = in(x);
+
+    delxy = (x-y)/10;
+    delyx = (y-x)/10;
+    delxy ~ xy;
+    delyx ~ yx;
+  }
+}
