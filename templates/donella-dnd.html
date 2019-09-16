@@ -404,6 +404,7 @@
         dropNum++;
         cloud.src = "/static/images/cloud.png";
         cloud.classList.add("cloud");
+        cloud.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.classList.add("cloud");
         box.appendChild(cloud);
         // Ball creation
@@ -417,7 +418,6 @@
           ball.addEventListener("mousedown", onBallMouseDown);
           box.appendChild(ball);
         }
-        box.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.style.position = "absolute";
         box.style.top = y;
         box.style.left = x;
@@ -471,6 +471,7 @@
         dropNum++;
         tap.src = "/static/images/tap.png";
         tap.classList.add("tap");
+        box.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.classList.add("tap");
         box.appendChild(tap);
         // Ball creation
@@ -488,7 +489,6 @@
         span.style.position = "absolute";
         span.style.top = "2em";
         span.style.left = "0";
-        box.style.cssText = "display: flex; justify-content: center; align-content: center; flex-direction: column;";
         box.style.position = "absolute";
         box.style.top = y;
         box.style.left = x;
